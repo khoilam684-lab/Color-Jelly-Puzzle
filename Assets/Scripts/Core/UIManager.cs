@@ -22,12 +22,16 @@ public class UIManager : MonoBehaviour
     {
         if (btnStart) btnStart.onClick.AddListener(() =>
         {
+            AppBannerCollapseAdManager.Instance.ShowBannerCollapse(); // hiện Collapse Ad
+            
             AudioManager.Instance?.PlayClick();
             GameManager.Instance?.ContinueFromSave();
         });
 
         if (btnSetting) btnSetting.onClick.AddListener(() =>
         {
+            
+            
             AudioManager.Instance?.PlayClick();
             GameManager.Instance?.Pause();
             ShowSettingPanel(true);
@@ -52,6 +56,8 @@ public class UIManager : MonoBehaviour
                 ShowRevive(false);
                 ShowGameOver(false);
                 ShowBestScore(false);
+                AppBannerCollapseAdManager.Instance.ShowBannerCollapse(); // hiện Collapse Ad
+                AppBannerRectangleAdManager.Instance.HideBannerRectangle(); // ẩn Rectangle Ad
                 break;
             case GameState.Playing:
                 ShowHome(false);
@@ -60,16 +66,25 @@ public class UIManager : MonoBehaviour
                 ShowRevive(false);
                 ShowGameOver(false);
                 ShowBestScore(false);
+                AppBannerCollapseAdManager.Instance.ShowBannerCollapse(); // hiện Collapse Ad
+                AppBannerRectangleAdManager.Instance.HideBannerRectangle(); // ẩn Rectangle Ad
                 break;
             case GameState.Paused:
                 ShowHome(false);
                 ShowHUD(true);
                 ShowSettingPanel(true);
+                AppBannerCollapseAdManager.Instance.HideBannerCollapse(); // ẩn Collapse Ad
+                AppBannerRectangleAdManager.Instance.ShowBannerRectangle(); // hiện Rectangle Ad
+                
                 break;
             case GameState.GameOver:
+                
                 ShowHome(false);
                 ShowHUD(true);
                 ShowSettingPanel(false);
+                
+                AppBannerCollapseAdManager.Instance.HideBannerCollapse(); // ẩn Collapse Ad
+                AppBannerRectangleAdManager.Instance.ShowBannerRectangle(); // hiện Rectangle Ad
                 break;
             case GameState.BestScore:
                 ShowHome(false);
@@ -78,6 +93,9 @@ public class UIManager : MonoBehaviour
                 ShowRevive(false);
                 ShowGameOver(false);
                 ShowBestScore(true);
+                
+                AppBannerCollapseAdManager.Instance.HideBannerCollapse(); // ẩn Collapse Ad
+                AppBannerRectangleAdManager.Instance.ShowBannerRectangle(); // hiện Rectangle Ad
                 break;
         }
     }

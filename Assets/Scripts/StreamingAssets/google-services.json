@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "815871708448",
+    "project_id": "color-jelly-puzzle",
+    "storage_bucket": "color-jelly-puzzle.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:815871708448:android:7650ddfd8ea9d573055b45",
+        "android_client_info": {
+          "package_name": "com.doanstudio.jellypuzzle"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJGZ8P6fZsFexyt7fGd5rkskMOYBs4mXA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

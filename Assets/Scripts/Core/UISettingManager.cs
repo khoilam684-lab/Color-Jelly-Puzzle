@@ -11,6 +11,9 @@ public class UISettingManager : MonoBehaviour
     {
         if (btnExitSetting) btnExitSetting.onClick.AddListener(() =>
         {
+            AppBannerRectangleAdManager.Instance.HideBannerRectangle(); // ẩn Rectangle Ad
+            AppBannerCollapseAdManager.Instance.ShowBannerCollapse(); // hiện Collapse Ad
+
             AudioManager.Instance?.PlayClick();
             GameManager.Instance?.Resume();
             GameManager.Instance?.ui?.ShowSettingPanel(false);
@@ -18,6 +21,9 @@ public class UISettingManager : MonoBehaviour
 
         if (btnRestart) btnRestart.onClick.AddListener(() =>
         {
+            AppBannerRectangleAdManager.Instance.HideBannerRectangle(); // ẩn Rectangle Ad
+            AppBannerCollapseAdManager.Instance.ShowBannerCollapse(); // hiện Collapse Ad
+
             AudioManager.Instance?.PlayClick();
             GameManager.Instance?.Restart();
             GameManager.Instance?.ui?.ShowSettingPanel(false);
@@ -25,6 +31,9 @@ public class UISettingManager : MonoBehaviour
 
         if (btnHome) btnHome.onClick.AddListener(() =>
         {
+            AppBannerRectangleAdManager.Instance.HideBannerRectangle(); // ẩn Rectangle Ad
+            AppBannerCollapseAdManager.Instance.ShowBannerCollapse(); // hiện Collapse Ad
+
             AudioManager.Instance?.PlayClick();
             GameManager.Instance?.GoHome();
         });

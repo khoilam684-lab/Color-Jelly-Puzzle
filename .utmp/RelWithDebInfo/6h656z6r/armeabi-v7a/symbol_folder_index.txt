@@ -1,0 +1,1 @@
+D:\Unity Project\Color-Jelly-Puzzle\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\build\intermediates\cxx\RelWithDebInfo\6h656z6r\obj\armeabi-v7a
