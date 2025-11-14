@@ -56,11 +56,13 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        
         // ví dụ trong MainMenu.Start()
-        /*AppBannerCollapseAdManager.Instance.LoadAndShowBanner();   // load sẵn (sẽ Hide ngay)
-        AppBannerRectangleAdManager.Instance.LoadAndShowBanner();  // load sẵn (sẽ Hide ngay)*/
+        AppBannerCollapseAdManager.Instance.LoadAndShowBanner();   // load sẵn (sẽ Hide ngay)
+        AppBannerRectangleAdManager.Instance.LoadAndShowBanner();  // load sẵn (sẽ Hide ngay)
 
         StartCoroutine(CoBootFlow());
+        
     }
 
     private IEnumerator CoBootFlow()

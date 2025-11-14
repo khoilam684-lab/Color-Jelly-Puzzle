@@ -1,112 +1,213 @@
 using UnityEngine;
-using UnityEngine.UI;
 using GoogleMobileAds.Api;
 using System;
-using System.Collections.Generic;
 using Firebase.Analytics;
 using Firebase.Crashlytics;
-using System.Security.Cryptography;
+using System.Collections;
 
-public class AppInterstitialAdManager_Admob_For_Play : MonoSingleton<AppInterstitialAdManager_Admob_For_Play>
+public class AppInterstitialAdManager_Admob_For_Play : MonoBehaviour
 {
+    public static AppInterstitialAdManager_Admob_For_Play Instance { get; private set; }
+
 #if UNITY_ANDROID
-    private const string AD_BANNER_ID = "ca-app-pub-3940256099942544/6300978111"; // test Fixed Sized Banner
-    //private const string AD_BANNER_ID = "ca-app-pub-7775816915507213/7432034972"; // id real
+    private const string AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"; // test Interstitial
+    //private const string AD_UNIT_ID = "ca-app-pub-7775816915507213/7432034972"; // id real
 #elif UNITY_IOS
-    private const string AD_BANNER_ID = "ca-app-pub-4845920793447822/7496706129";
+    private const string AD_UNIT_ID = "ca-app-pub-4845920793447822/7496706129";
 #else
-    private const string AD_BANNER_ID = "unexpected_platform";
+    private const string AD_UNIT_ID = "unexpected_platform";
 #endif
-    private static AppInterstitialAdManager_Admob_For_Play instance;
 
     private InterstitialAd _interstitialAd;
+    private bool isLoadingAd = false;
+    private bool isShowingAd = false;
+    
+    // Callbacks để giữ khi show ad
+    private Action _onCloseCallback;
+    private Action _successCallback;
+    private Action _failCallback;
+
+    void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+    }
+
+    void Start()
+    {
+        // KHÔNG khởi tạo MobileAds ở đây
+        // AdManager sẽ lo việc đó
+    }
 
     public void LoadAd()
     {
-        // Clean up the old ad before loading a new one.
+        // Kiểm tra điều kiện
+        if (!AdManager.IsInitialized)
+        {
+            Debug.LogWarning("[Interstitial] MobileAds not initialized yet");
+            return;
+        }
+
+        if (!AdManager.CanShowAds())
+        {
+            Debug.Log("[Interstitial] Ads disabled");
+            return;
+        }
+
+        if (isLoadingAd)
+        {
+            Debug.Log("[Interstitial] Already loading...");
+            return;
+        }
+
+        // Clean up ad cũ trước khi load ad mới
         if (_interstitialAd != null)
         {
             DestroyAd();
         }
 
-        Debug.LogError("Loading interstitial ad for play.");
+        isLoadingAd = true;
+        Debug.Log("[Interstitial] Loading ad...");
 
-        // Create our request used to load the ad.
-        var adRequest = new AdRequest();
-
-        InterstitialAd.Load(AD_BANNER_ID, adRequest, (InterstitialAd ad, LoadAdError error) =>
+        try
         {
-            // If the operation failed with a reason.
-            if (error != null)
-            {
-                Debug.LogError("Interstitial ad failed to load an ad with error : " + error);
-                return;
-            }
-            // If the operation failed for unknown reasons.
-            // This is an unexpected error, please report this bug if it happens.
-            if (ad == null)
-            {
-                Debug.LogError("Unexpected error: Interstitial load event fired with null ad and null error.");
-                return;
-            }
+            var adRequest = new AdRequest();
 
-            // The operation completed successfully.
-            Debug.Log("Interstitial ad loaded with response : " + ad.GetResponseInfo());
-            _interstitialAd = ad;
+            InterstitialAd.Load(AD_UNIT_ID, adRequest, (InterstitialAd ad, LoadAdError error) =>
+            {
+                isLoadingAd = false;
 
-            // Register to ad events to extend functionality.
-            RegisterEventHandlers(ad);
-        });
+                // Nếu có lỗi
+                if (error != null)
+                {
+                    Debug.LogError($"[Interstitial] Load failed: {error}");
+                    
+                    // Retry sau 10 giây
+                    StartCoroutine(RetryLoadAfterDelay(10f));
+                    return;
+                }
+
+                // Nếu ad null (unexpected error)
+                if (ad == null)
+                {
+                    Debug.LogError("[Interstitial] Unexpected error: ad is null");
+                    StartCoroutine(RetryLoadAfterDelay(10f));
+                    return;
+                }
+
+                // Load thành công
+                _interstitialAd = ad;
+                Debug.Log("[Interstitial] Ad loaded successfully: " + ad.GetResponseInfo());
+
+                // Đăng ký event handlers
+                RegisterEventHandlers(ad);
+            });
+        }
+        catch (Exception e)
+        {
+            isLoadingAd = false;
+            Debug.LogError($"[Interstitial] Exception during load: {e.Message}");
+            Crashlytics.LogException(e);
+            
+            StartCoroutine(RetryLoadAfterDelay(10f));
+        }
+    }
+
+    private IEnumerator RetryLoadAfterDelay(float delay)
+    {
+        Debug.Log($"[Interstitial] Will retry loading in {delay} seconds...");
+        yield return new WaitForSeconds(delay);
+        
+        if (AdManager.CanShowAds())
+        {
+            LoadAd();
+        }
     }
 
     public void ShowInterstitial(Action OnClose = null, Action SuccessEvent = null, Action FailEvent = null)
     {
+        // Kiểm tra điều kiện
+        if (!AdManager.CanShowAds())
+        {
+            Debug.Log("[Interstitial] Ads disabled");
+            FailEvent?.Invoke();
+            OnClose?.Invoke();
+            return;
+        }
+
+        if (isShowingAd)
+        {
+            Debug.Log("[Interstitial] Already showing an ad");
+            FailEvent?.Invoke();
+            return;
+        }
+
         try
         {
+            // Lưu callbacks
+            _onCloseCallback = OnClose;
+            _successCallback = SuccessEvent;
+            _failCallback = FailEvent;
+
+            // Kiểm tra ad có sẵn sàng không
             if (_interstitialAd != null && _interstitialAd.CanShowAd())
             {
+                Debug.Log("[Interstitial] Showing ad...");
+                isShowingAd = true;
                 _interstitialAd.Show();
-                //AppmetricaTracking.AdTracking(TypeAdTracking.INTERSTITIAL, "SHOW");
-                _interstitialAd.OnAdFullScreenContentClosed += () =>
-                {
-                    //AppmetricaTracking.AdTracking(TypeAdTracking.INTERSTITIAL, "CLOSE");
-                    Debug.Log("Interstitial Admob ad full screen content closed.");
-                    OnClose?.Invoke();
-                    //AdvertisementManager.Instance.forceAdsCountdown = RemoteConfig.forceAdsCountdown;
-                    //AdvertisementManager.Instance.StartCoroutine(AdvertisementManager.Instance.WaitForShowAds());
-                    LoadAd();
-                };
-                _interstitialAd.OnAdFullScreenContentOpened += () =>
-                {
-                    Debug.LogError("Interstitial Admob ad full screen content opened.");
-                    SuccessEvent?.Invoke();
-                };
-                _interstitialAd.OnAdFullScreenContentFailed += (AdError error) =>
-                {
-                    Debug.LogError("Interstitial Admob ad fail.");
-                    FailEvent?.Invoke();
-                };
             }
             else
             {
-                Debug.LogError("Interstitial Admob ad is not ready yet.");
+                Debug.LogWarning("[Interstitial] Ad not ready yet");
+                
+                // Load ad mới
                 LoadAd();
+                
+                // Gọi fail callback
                 FailEvent?.Invoke();
                 OnClose?.Invoke();
             }
         }
         catch (Exception e)
         {
+            isShowingAd = false;
+            Debug.LogError($"[Interstitial] Exception during show: {e.Message}");
             Crashlytics.LogException(e);
-            Crashlytics.Log("Exception occurred in AdmobInterstitialAd_show 100%");
+            
+            FailEvent?.Invoke();
+            OnClose?.Invoke();
+            
+            // Load ad mới
+            LoadAd();
         }
     }
+
+    /// <summary>
+    /// Kiểm tra xem có ad sẵn sàng để show không
+    /// </summary>
+    public bool IsAdReady()
+    {
+        return _interstitialAd != null && _interstitialAd.CanShowAd();
+    }
+
     public void DestroyAd()
     {
         if (_interstitialAd != null)
         {
-            Debug.Log("Destroying interstitial ad.");
-            _interstitialAd.Destroy();
+            Debug.Log("[Interstitial] Destroying ad");
+            try
+            {
+                _interstitialAd.Destroy();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[Interstitial] Destroy failed: {e.Message}");
+            }
             _interstitialAd = null;
         }
     }
@@ -116,31 +217,34 @@ public class AppInterstitialAdManager_Admob_For_Play : MonoSingleton<AppIntersti
         if (_interstitialAd != null)
         {
             var responseInfo = _interstitialAd.GetResponseInfo();
-            UnityEngine.Debug.Log(responseInfo);
+            Debug.Log($"[Interstitial] Response Info: {responseInfo}");
+        }
+        else
+        {
+            Debug.Log("[Interstitial] No ad loaded");
         }
     }
 
     private void RegisterEventHandlers(InterstitialAd ad)
     {
-        // Raised when the ad is estimated to have earned money.
+        // Raised when the ad is estimated to have earned money
         ad.OnAdPaid += (AdValue adValue) =>
         {
-            Debug.Log(String.Format("Interstitial admob paid {0} {1}.",
-                adValue.Value,
-                adValue.CurrencyCode));
+            Debug.Log($"[Interstitial] Paid: {adValue.Value} {adValue.CurrencyCode}");
+            
             try
             {
                 if (adValue == null) return;
+                
                 double value = adValue.Value * 0.000001f;
 
-                Parameter[] adParameters =
-{
+                Parameter[] adParameters = {
                     new Parameter("ad_platform", "admob"),
                     new Parameter("ad_format", "interstitial"),
                     new Parameter("currency", adValue.CurrencyCode),
                     new Parameter("value", value),
-                    new Parameter("ad_unit_name", AD_BANNER_ID),
-                    new Parameter("ad_unit_id", AD_BANNER_ID),
+                    new Parameter("ad_unit_name", AD_UNIT_ID),
+                    new Parameter("ad_unit_id", AD_UNIT_ID),
                     new Parameter("ad_source", "admob"),
                     new Parameter("placement", "first_play"),
                     new Parameter("revenue_precision", adValue.Precision.ToString())
@@ -150,36 +254,73 @@ public class AppInterstitialAdManager_Admob_For_Play : MonoSingleton<AppIntersti
             }
             catch (Exception e)
             {
+                Debug.LogError($"[Interstitial] ad_impression error: {e.Message}");
                 Crashlytics.LogException(e);
-                Crashlytics.Log("Exception occurred in ad_impression interstitial for play");
             }
         };
-        // Raised when an impression is recorded for an ad.
+
+        // Raised when an impression is recorded for an ad
         ad.OnAdImpressionRecorded += () =>
         {
-            Debug.Log("Interstitial admob recorded an impression.");
+            Debug.Log("[Interstitial] Impression recorded");
         };
-        // Raised when a click is recorded for an ad.
+
+        // Raised when a click is recorded for an ad
         ad.OnAdClicked += () =>
         {
-            Debug.Log("Interstitial admob was clicked.");
+            Debug.Log("[Interstitial] Clicked");
         };
-        // Raised when an ad opened full screen content.
+
+        // Raised when an ad opened full screen content
         ad.OnAdFullScreenContentOpened += () =>
         {
-            Debug.Log("Interstitial admob full screen content opened.");
+            Debug.Log("[Interstitial] Full screen content opened");
+            isShowingAd = true;
+            
+            // Gọi success callback
+            _successCallback?.Invoke();
         };
-        // Raised when the ad closed full screen content.
+
+        // Raised when the ad closed full screen content
         ad.OnAdFullScreenContentClosed += () =>
         {
-            Debug.Log("Interstitial admob full screen content closed.");
+            Debug.Log("[Interstitial] Full screen content closed");
+            isShowingAd = false;
+            
+            // Gọi close callback
+            _onCloseCallback?.Invoke();
+            
+            // Clear callbacks
+            _onCloseCallback = null;
+            _successCallback = null;
+            _failCallback = null;
+            
+            // Load ad mới cho lần sau
+            LoadAd();
         };
-        // Raised when the ad failed to open full screen content.
+
+        // Raised when the ad failed to open full screen content
         ad.OnAdFullScreenContentFailed += (AdError error) =>
         {
-            Debug.LogError("Interstitial admob failed to open full screen content with error : "
-                + error);
+            Debug.LogError($"[Interstitial] Full screen content failed: {error}");
+            isShowingAd = false;
+            
+            // Gọi fail callback
+            _failCallback?.Invoke();
+            _onCloseCallback?.Invoke();
+            
+            // Clear callbacks
+            _onCloseCallback = null;
+            _successCallback = null;
+            _failCallback = null;
+            
+            // Load ad mới
+            LoadAd();
         };
     }
 
+    void OnDestroy()
+    {
+        DestroyAd();
+    }
 }

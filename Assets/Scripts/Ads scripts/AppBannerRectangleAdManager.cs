@@ -1,15 +1,14 @@
 using UnityEngine;
-using UnityEngine.UI;
 using GoogleMobileAds.Api;
 using System;
-using System.Collections.Generic;
-//using Popup;
 using Firebase.Analytics;
 using Firebase.Crashlytics;
 using System.Collections;
 
-public class AppBannerRectangleAdManager : MonoSingleton<AppBannerRectangleAdManager>
+public class AppBannerRectangleAdManager : MonoBehaviour
 {
+    public static AppBannerRectangleAdManager Instance { get; private set; }
+
 #if UNITY_ANDROID
     private const string AD_BANNER_ID = "ca-app-pub-3940256099942544/6300978111"; // test
     //private const string AD_BANNER_ID = "ca-app-pub-4845920793447822/5221170220"; // id real
@@ -19,66 +18,92 @@ public class AppBannerRectangleAdManager : MonoSingleton<AppBannerRectangleAdMan
     private const string AD_BANNER_ID = "unexpected_platform";
 #endif
 
-    private static AppBannerRectangleAdManager instance;
-
     private BannerView bannerView;
-    private AdSize adSize;
+    private bool isLoading = false;
+
+    void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+    }
 
     void Start()
     {
-        // Nếu bạn đã Initialize ở chỗ khác rồi thì có thể comment khối này lại
-        // MobileAds.Initialize((initStatus) =>
-        // {
-        //     LoadAndShowBanner();
-        // });
+        // KHÔNG khởi tạo MobileAds ở đây nữa
+        // AdManager sẽ lo việc đó
     }
 
-    public void CreateBannerView(/*int idx*/)
+    public void CreateBannerView()
     {
         if (bannerView != null)
         {
             DestroyBannerView();
         }
 
-        AdSize adSize = AdSize.MediumRectangle;
-        bannerView = new BannerView(AD_BANNER_ID, adSize, AdPosition.Bottom);
-    }
-
-    public void LoadAndShowBanner(/*int idx*/)
-    {
         try
         {
-            // Nếu game bạn không có hệ thống mua noAds thì bỏ đoạn check này luôn
-            // if (PlayerData.current.noAds == true)
-            // {
-            //     return;
-            // }
-
-            Debug.LogError("Load and show Banner Rectangle ");
-            CreateBannerView(/*idx*/);
-            ListenToAdEvents();
-
-            AdRequest adRequest = AdRequestBuild();
-
-            // Rectangle banner bình thường KHÔNG cần collapsible
-            // Nếu bạn muốn nó cũng collapsible thì có thể giữ lại:
-            // adRequest.Extras.Add("collapsible", "bottom");
-
-            bannerView.LoadAd(adRequest);
-            bannerView.Hide();   // load xong nhưng ẩn đi, chỉ show ở chỗ bạn gọi ShowBannerRectangle
-            wait();              // NOTE: hàm này hiện tại KHÔNG chờ gì cả (không dùng StartCoroutine)
+            AdSize adSize = AdSize.MediumRectangle;
+            bannerView = new BannerView(AD_BANNER_ID, adSize, AdPosition.Bottom);
+            Debug.Log("[BannerRectangle] Banner view created");
         }
         catch (Exception e)
         {
+            Debug.LogError($"[BannerRectangle] Failed to create banner: {e.Message}");
             Crashlytics.LogException(e);
-            Crashlytics.Log("Exception occurred in LoadAndShowBanner_Rectangle");
         }
-
     }
 
-    IEnumerator wait()
+    public void LoadAndShowBanner()
     {
-        yield return new WaitForSeconds(3f);
+        // Kiểm tra điều kiện
+        if (!AdManager.CanShowAds())
+        {
+            Debug.Log("[BannerRectangle] Ads disabled");
+            return;
+        }
+
+        if (!AdManager.IsInitialized)
+        {
+            Debug.LogWarning("[BannerRectangle] MobileAds not initialized yet");
+            return;
+        }
+
+        if (isLoading)
+        {
+            Debug.Log("[BannerRectangle] Already loading...");
+            return;
+        }
+
+        try
+        {
+            isLoading = true;
+            Debug.Log("[BannerRectangle] Loading banner...");
+
+            CreateBannerView();
+            ListenToAdEvents();
+
+            AdRequest adRequest = new AdRequest();
+            
+            // Rectangle banner KHÔNG dùng collapsible
+            // Nếu muốn thêm collapsible thì uncomment dòng dưới:
+            // adRequest.Extras.Add("collapsible", "bottom");
+
+            bannerView.LoadAd(adRequest);
+            
+            // Ẩn đi ngay sau khi load, chờ gọi ShowBannerRectangle
+            bannerView.Hide();
+        }
+        catch (Exception e)
+        {
+            isLoading = false;
+            Debug.LogError($"[BannerRectangle] Load failed: {e.Message}");
+            Crashlytics.LogException(e);
+        }
     }
 
     public void HideBannerRectangle()
@@ -88,9 +113,10 @@ public class AppBannerRectangleAdManager : MonoSingleton<AppBannerRectangleAdMan
             if (bannerView != null)
             {
                 bannerView.Hide();
+                Debug.Log("[BannerRectangle] Hidden");
             }
 
-            // Khi ẩn Rectangle thì show Collapse (nếu bạn muốn vậy)
+            // Khi ẩn Rectangle thì show Collapse (nếu bạn muốn)
             if (AppBannerCollapseAdManager.Instance != null)
             {
                 AppBannerCollapseAdManager.Instance.ShowBannerCollapse();
@@ -98,62 +124,89 @@ public class AppBannerRectangleAdManager : MonoSingleton<AppBannerRectangleAdMan
         }
         catch (Exception e)
         {
+            Debug.LogError($"[BannerRectangle] Hide failed: {e.Message}");
             Crashlytics.LogException(e);
-            Crashlytics.Log("Exception occurred in HideBannerRectangle");
         }
-
     }
 
     public void ShowBannerRectangle()
     {
+        if (!AdManager.CanShowAds())
+        {
+            Debug.Log("[BannerRectangle] Ads disabled");
+            return;
+        }
+
         try
         {
-            Debug.LogError("ShowBannerRectangle");
+            Debug.Log("[BannerRectangle] Showing...");
 
-            // Nếu sau này bạn có biến noAds riêng thì check ở đây
-            // if (!PlayerData.current.noAds)
+            if (bannerView == null)
             {
-                if (bannerView == null)
-                {
-                    LoadAndShowBanner();
-                }
+                LoadAndShowBanner();
+                // Đợi load xong rồi mới show
+                StartCoroutine(WaitAndShow());
+                return;
+            }
 
-                bannerView.Show();
+            bannerView.Show();
 
-                if (AppBannerCollapseAdManager.Instance != null)
-                {
-                    AppBannerCollapseAdManager.Instance.HideBannerCollapse(); // show Rectangle thì ẩn Collapse
-                }
+            // Show Rectangle thì ẩn Collapse
+            if (AppBannerCollapseAdManager.Instance != null)
+            {
+                AppBannerCollapseAdManager.Instance.HideBannerCollapse();
             }
         }
         catch (Exception e)
         {
+            Debug.LogError($"[BannerRectangle] Show failed: {e.Message}");
             Crashlytics.LogException(e);
-            Crashlytics.Log("Exception occurred in ShowBannerRectangle");
+        }
+    }
+
+    private IEnumerator WaitAndShow()
+    {
+        // Đợi banner load xong (tối đa 5 giây)
+        float elapsed = 0f;
+        while (isLoading && elapsed < 5f)
+        {
+            yield return new WaitForSeconds(0.1f);
+            elapsed += 0.1f;
         }
 
+        if (bannerView != null && !isLoading)
+        {
+            bannerView.Show();
+            
+            if (AppBannerCollapseAdManager.Instance != null)
+            {
+                AppBannerCollapseAdManager.Instance.HideBannerCollapse();
+            }
+        }
     }
 
     private void ListenToAdEvents()
     {
+        if (bannerView == null) return;
+
         bannerView.OnBannerAdLoaded += () =>
         {
-            Debug.Log("Banner view loaded an ad with response : "
-                + bannerView.GetResponseInfo());
+            isLoading = false;
+            Debug.Log("[BannerRectangle] Ad loaded: " + bannerView.GetResponseInfo());
         };
-        // Raised when an ad fails to load into the banner view.
+
         bannerView.OnBannerAdLoadFailed += (LoadAdError error) =>
         {
-            Debug.LogError("Banner view rectangle failed to load an ad with error : "
-                + error);
-            LoadAndShowBanner();
+            isLoading = false;
+            Debug.LogError("[BannerRectangle] Load failed: " + error);
+            
+            // Retry sau 5 giây
+            StartCoroutine(RetryLoad());
         };
-        // Raised when the ad is estimated to have earned money.
+
         bannerView.OnAdPaid += (AdValue adValue) =>
         {
-            Debug.LogError("Banner view paid {0} {1}." +
-                adValue.Value +
-                adValue.CurrencyCode);
+            Debug.Log($"[BannerRectangle] Paid: {adValue.Value} {adValue.CurrencyCode}");
 
             if (adValue == null) return;
             double value = adValue.Value * 0.000001f;
@@ -166,58 +219,59 @@ public class AppBannerRectangleAdManager : MonoSingleton<AppBannerRectangleAdMan
             };
             FirebaseAnalytics.LogEvent("ad_impression", adParameters);
         };
-        // Raised when an impression is recorded for an ad.
+
         bannerView.OnAdImpressionRecorded += () =>
         {
-            Debug.LogError("Banner view recorded an impression.");
+            Debug.Log("[BannerRectangle] Impression recorded");
         };
-        // Raised when a click is recorded for an ad.
+
         bannerView.OnAdClicked += () =>
         {
-            Debug.LogError("Banner view was clicked.");
+            Debug.Log("[BannerRectangle] Clicked");
         };
-        // Raised when an ad opened full screen content.
+
         bannerView.OnAdFullScreenContentOpened += () =>
         {
-            Debug.LogError("Banner view full screen content opened.");
+            Debug.Log("[BannerRectangle] Full screen opened");
         };
-        // Raised when the ad closed full screen content.
+
         bannerView.OnAdFullScreenContentClosed += () =>
         {
-            Debug.LogError("Banner view full screen content closed.");
+            Debug.Log("[BannerRectangle] Full screen closed");
         };
     }
 
-    // ==== ĐÃ ĐỔI CHO PHÙ HỢP v9.5 (KHÔNG DÙNG Builder) ====
-    AdRequest AdRequestBuild()
+    private IEnumerator RetryLoad()
     {
-        // Với plugin 9.5 có thể tạo request trực tiếp như này
-        var request = new AdRequest();
-        // Nếu cần thêm keyword / extras thì add vào đây, ví dụ:
-        // request.Keywords.Add("game");
-        return request;
+        yield return new WaitForSeconds(5f);
+        
+        if (AdManager.CanShowAds() && bannerView != null)
+        {
+            Debug.Log("[BannerRectangle] Retrying load...");
+            LoadAndShowBanner();
+        }
     }
 
     public void DestroyBannerView()
     {
         if (bannerView != null)
         {
-            Debug.Log("Destroying banner view.");
-            bannerView.Destroy();
+            Debug.Log("[BannerRectangle] Destroying banner");
+            try
+            {
+                bannerView.Destroy();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[BannerRectangle] Destroy failed: {e.Message}");
+            }
             bannerView = null;
         }
+        isLoading = false;
     }
 
-    #region Banner Methods Check isCollapse
-    private bool IsCollapsibleBanner(AdRequest adRequest)
+    void OnDestroy()
     {
-        // Kiểm tra xem adRequest có chứa thuộc tính "collapsible" không
-        if (adRequest.Extras.ContainsKey("collapsible"))
-        {
-            return true; // Banner có tính năng collapsible
-        }
-
-        return false; // Banner không có tính năng collapsible hoặc không chứa thông tin về tính năng collapsible
+        DestroyBannerView();
     }
-    #endregion
 }
