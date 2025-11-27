@@ -1,8 +1,8 @@
 using UnityEngine;
 using GoogleMobileAds.Api;
 using System;
-using Firebase.Analytics;
-using Firebase.Crashlytics;
+// using Firebase.Analytics;
+// using Firebase.Crashlytics;
 using System.Collections;
 
 public class AppBannerRectangleAdManager : MonoBehaviour
@@ -54,7 +54,7 @@ public class AppBannerRectangleAdManager : MonoBehaviour
         catch (Exception e)
         {
             Debug.LogError($"[BannerRectangle] Failed to create banner: {e.Message}");
-            Crashlytics.LogException(e);
+            //Crashlytics.LogException(e);
         }
     }
 
@@ -102,7 +102,7 @@ public class AppBannerRectangleAdManager : MonoBehaviour
         {
             isLoading = false;
             Debug.LogError($"[BannerRectangle] Load failed: {e.Message}");
-            Crashlytics.LogException(e);
+            //Crashlytics.LogException(e);
         }
     }
 
@@ -125,7 +125,7 @@ public class AppBannerRectangleAdManager : MonoBehaviour
         catch (Exception e)
         {
             Debug.LogError($"[BannerRectangle] Hide failed: {e.Message}");
-            Crashlytics.LogException(e);
+            //Crashlytics.LogException(e);
         }
     }
 
@@ -148,19 +148,18 @@ public class AppBannerRectangleAdManager : MonoBehaviour
                 StartCoroutine(WaitAndShow());
                 return;
             }
-
-            bannerView.Show();
-
             // Show Rectangle thì ẩn Collapse
             if (AppBannerCollapseAdManager.Instance != null)
             {
                 AppBannerCollapseAdManager.Instance.HideBannerCollapse();
             }
+            
+            bannerView.Show();
         }
         catch (Exception e)
         {
             Debug.LogError($"[BannerRectangle] Show failed: {e.Message}");
-            Crashlytics.LogException(e);
+            //Crashlytics.LogException(e);
         }
     }
 
@@ -217,7 +216,7 @@ public class AppBannerRectangleAdManager : MonoBehaviour
                 new Firebase.Analytics.Parameter("currency","USD"),
                 new Firebase.Analytics.Parameter("value", value)
             };
-            FirebaseAnalytics.LogEvent("ad_impression", adParameters);
+            //FirebaseAnalytics.LogEvent("ad_impression", adParameters);
         };
 
         bannerView.OnAdImpressionRecorded += () =>

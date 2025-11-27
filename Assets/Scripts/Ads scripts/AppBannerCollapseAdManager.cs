@@ -123,7 +123,11 @@ public class AppBannerCollapseAdManager : MonoBehaviour
         {
             return;
         }
-
+        if (!AdManager.IsInitialized)
+        {
+            Debug.LogWarning("[BannerRectangle] MobileAds not initialized yet");
+            return;
+        }
         try
         {
             Debug.Log("[BannerCollapse] Showing...");

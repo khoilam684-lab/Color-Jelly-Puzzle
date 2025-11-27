@@ -56,11 +56,7 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        
-        // ví dụ trong MainMenu.Start()
-        AppBannerCollapseAdManager.Instance.LoadAndShowBanner();   // load sẵn (sẽ Hide ngay)
-        AppBannerRectangleAdManager.Instance.LoadAndShowBanner();  // load sẵn (sẽ Hide ngay)
-
+        AppBannerCollapseAdManager.Instance.LoadAndShowBanner();
         StartCoroutine(CoBootFlow());
         
     }
@@ -130,7 +126,7 @@ public class GameManager : MonoBehaviour
     {
         AudioManager.Instance?.PlayClick();
         StartNewGame();
-        AppBannerRectangleAdManager.Instance.HideBannerRectangle(); // ẩn Rectangle ads
+        
     }
 
     public void StartNewGame(int? seed = null)
@@ -170,6 +166,7 @@ public class GameManager : MonoBehaviour
         ui?.ShowBestScore(false);
 
         AudioManager.Instance?.PlayStartGame();
+        
     }
 
     public void SaveSnapshotNow()
@@ -190,6 +187,7 @@ public class GameManager : MonoBehaviour
         if (State != GameState.Playing) return;
         Time.timeScale = 0f;
         SetState(GameState.Paused);
+        
     }
 
     public void Resume()
@@ -197,12 +195,15 @@ public class GameManager : MonoBehaviour
         if (State != GameState.Paused) return;
         Time.timeScale = 1f;
         SetState(GameState.Playing);
+
     }
 
     public void Restart()
     {
         Time.timeScale = 1f;
         StartNewGame();
+       
+
     }
 
     private void SetState(GameState s)

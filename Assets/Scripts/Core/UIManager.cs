@@ -52,7 +52,9 @@ public class UIManager : MonoBehaviour
                 ShowRevive(false);
                 ShowGameOver(false);
                 ShowBestScore(false);
+                AppBannerCollapseAdManager.Instance?.ShowBannerCollapse();
                 break;
+            
             case GameState.Playing:
                 ShowHome(false);
                 ShowHUD(true);
@@ -60,24 +62,21 @@ public class UIManager : MonoBehaviour
                 ShowRevive(false);
                 ShowGameOver(false);
                 ShowBestScore(false);
-                
-                //AppBannerRectangleAdManager.Instance?.HideBannerRectangle(); // ẩn Rectangle Ad
+                AppBannerCollapseAdManager.Instance?.ShowBannerCollapse();
                 
                 break;
             case GameState.Paused:
                 ShowHome(false);
                 ShowHUD(true);
                 ShowSettingPanel(true);
-                
-                //AppBannerRectangleAdManager.Instance?.ShowBannerRectangle(); // hiện Rectangle Ad
-                
+
                 break;
             case GameState.GameOver:
-                
                 ShowHome(false);
                 ShowHUD(true);
                 ShowSettingPanel(false);
-                //AppBannerRectangleAdManager.Instance?.ShowBannerRectangle(); // hiện Rectangle Ad
+                AppBannerCollapseAdManager.Instance?.HideBannerCollapse();
+                AppInterstitialAdManager_Admob_For_Play.Instance?.ShowInterstitial();
                 break;
             case GameState.BestScore:
                 ShowHome(false);
@@ -86,7 +85,6 @@ public class UIManager : MonoBehaviour
                 ShowRevive(false);
                 ShowGameOver(false);
                 ShowBestScore(true);
-                //AppBannerRectangleAdManager.Instance?.ShowBannerRectangle(); // hiện Rectangle Ad
                 break;
         }
     }
@@ -100,7 +98,10 @@ public class UIManager : MonoBehaviour
 
     public void ShowLoading(bool on)
     {
-        if (loadingPanel) loadingPanel.Show(on);
+        if (loadingPanel)
+        {
+            loadingPanel.Show(on);
+        }
     }
 
     public void SetLoadingProgress01(float p)

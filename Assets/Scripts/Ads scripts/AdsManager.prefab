@@ -9,8 +9,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 468322106200785708}
-  - component: {fileID: 4703835730188045880}
   - component: {fileID: 5414166975941480582}
+  - component: {fileID: 7898158475711471914}
   m_Layer: 0
   m_Name: AdsManager
   m_TagString: 
@@ -33,18 +33,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4703835730188045880
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 249336369333482696}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c73361bbade28e70a7b3e7a9ae5d823c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &5414166975941480582
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -66,3 +54,16 @@ MonoBehaviour:
   show_afk_ads_after_level: 2
   show_full_ads_after_level: 3
   show_iap: 1
+--- !u!114 &7898158475711471914
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 249336369333482696}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c056c2d32aee5154f873e7afdb533b1f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  showDebugLogs: 1

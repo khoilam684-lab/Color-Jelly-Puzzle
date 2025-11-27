@@ -17,8 +17,14 @@ public class Interstitial_AdManager_For_15s : MonoSingleton<Interstitial_AdManag
     void Start()
     {
         // lấy từ RC; nếu không có thì dùng mặc định
-        try { _idleSeconds = Mathf.Max(5f, RemoteConfig.countDown_15s_interstitial_admob); }
-        catch { _idleSeconds = defaultIdleSeconds; }
+        try
+        {
+            _idleSeconds = Mathf.Max(5f, RemoteConfig.countDown_15s_interstitial_admob);
+        }
+        catch
+        {
+            _idleSeconds = defaultIdleSeconds;
+        }
 
         _timer = 0f;
         DontDestroyOnLoad(gameObject);
@@ -39,20 +45,25 @@ public class Interstitial_AdManager_For_15s : MonoSingleton<Interstitial_AdManag
 
     bool FeatureEnabledByRC()
     {
-        // công tắc tổng + (tùy chọn) công tắc riêng cho 15s
+        // CHỈ lo công tắc riêng 15s; ads_display đã ở AdManager.CanShowAds()
         try
         {
-            int adsDisplay = RemoteConfig.ads_display;
             int enable15s = 1;
             try { enable15s = RemoteConfig.admob_15s_enable; } catch { }
-            return adsDisplay != 0 && enable15s != 0;
+            return enable15s != 0;
         }
-        catch { return true; }
+        catch
+        {
+            // RC lỗi thì coi như bật (vì vẫn bị chặn bởi CanShowAds)
+            return true;
+        }
     }
 
     bool IsUserInteracting()
     {
-        if (Input.anyKeyDown || Input.GetMouseButtonDown(0) || Input.touchCount > 0) return true;
+        if (Input.anyKeyDown || Input.GetMouseButtonDown(0) || Input.touchCount > 0)
+            return true;
+
         // nếu cần kiểm tra UI:
         // if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return true;
         return false;
@@ -62,22 +73,33 @@ public class Interstitial_AdManager_For_15s : MonoSingleton<Interstitial_AdManag
     {
         _waitingOrShowing = true;
 
-        Action onClose = () => { _timer = 0f; _waitingOrShowing = false; };
-        Action onFail  = () => { _waitingOrShowing = false; };
+        Action onClose = () =>
+        {
+            _timer = 0f;
+            _waitingOrShowing = false;
+        };
 
-        // // nếu có hệ thống RemoveAds tự bạn, check tại đây
-        // if (HasRemoveAds())
-        // {
-        //     onClose.Invoke();
-        //     return;
-        // }
+        Action onFail = () =>
+        {
+            _waitingOrShowing = false;
+        };
 
-        AppInterstitialAdManager_Admob_For_Play.Instance.ShowInterstitial(onClose, null, onFail);
+        // User vừa mua NoAds / RC vừa tắt ads
+        if (!AdManager.CanShowAds())
+        {
+            onClose.Invoke();
+            return;
+        }
+
+        var interMgr = AppInterstitialAdManager_Admob_For_Play.Instance;
+        if (interMgr == null)
+        {
+            Debug.LogWarning("[15s Interstitial] AppInterstitialAdManager_Admob_For_Play.Instance == null");
+            onFail.Invoke();
+            onClose.Invoke();
+            return;
+        }
+
+        interMgr.ShowInterstitial(onClose, null, onFail);
     }
-
-    // bool HasRemoveAds()
-    // {
-    //     try { return SolitaireTripeaks.AuxiliaryData.Get().BuyRemoveAds; }
-    //     catch { return false; }
-    // }
 }

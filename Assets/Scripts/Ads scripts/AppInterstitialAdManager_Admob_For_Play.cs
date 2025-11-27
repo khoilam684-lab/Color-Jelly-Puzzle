@@ -1,8 +1,8 @@
 using UnityEngine;
 using GoogleMobileAds.Api;
 using System;
-using Firebase.Analytics;
-using Firebase.Crashlytics;
+// using Firebase.Analytics;
+// using Firebase.Crashlytics;
 using System.Collections;
 
 public class AppInterstitialAdManager_Admob_For_Play : MonoBehaviour
@@ -112,7 +112,7 @@ public class AppInterstitialAdManager_Admob_For_Play : MonoBehaviour
         {
             isLoadingAd = false;
             Debug.LogError($"[Interstitial] Exception during load: {e.Message}");
-            Crashlytics.LogException(e);
+            //Crashlytics.LogException(e);
             
             StartCoroutine(RetryLoadAfterDelay(10f));
         }
@@ -177,7 +177,7 @@ public class AppInterstitialAdManager_Admob_For_Play : MonoBehaviour
         {
             isShowingAd = false;
             Debug.LogError($"[Interstitial] Exception during show: {e.Message}");
-            Crashlytics.LogException(e);
+            //Crashlytics.LogException(e);
             
             FailEvent?.Invoke();
             OnClose?.Invoke();
@@ -238,24 +238,24 @@ public class AppInterstitialAdManager_Admob_For_Play : MonoBehaviour
                 
                 double value = adValue.Value * 0.000001f;
 
-                Parameter[] adParameters = {
-                    new Parameter("ad_platform", "admob"),
-                    new Parameter("ad_format", "interstitial"),
-                    new Parameter("currency", adValue.CurrencyCode),
-                    new Parameter("value", value),
-                    new Parameter("ad_unit_name", AD_UNIT_ID),
-                    new Parameter("ad_unit_id", AD_UNIT_ID),
-                    new Parameter("ad_source", "admob"),
-                    new Parameter("placement", "first_play"),
-                    new Parameter("revenue_precision", adValue.Precision.ToString())
-                };
+                // Parameter[] adParameters = {
+                //     new Parameter("ad_platform", "admob"),
+                //     new Parameter("ad_format", "interstitial"),
+                //     new Parameter("currency", adValue.CurrencyCode),
+                //     new Parameter("value", value),
+                //     new Parameter("ad_unit_name", AD_UNIT_ID),
+                //     new Parameter("ad_unit_id", AD_UNIT_ID),
+                //     new Parameter("ad_source", "admob"),
+                //     new Parameter("placement", "first_play"),
+                //     new Parameter("revenue_precision", adValue.Precision.ToString())
+                //};
 
-                FirebaseAnalytics.LogEvent("ad_impression", adParameters);
+                //FirebaseAnalytics.LogEvent("ad_impression", adParameters);
             }
             catch (Exception e)
             {
                 Debug.LogError($"[Interstitial] ad_impression error: {e.Message}");
-                Crashlytics.LogException(e);
+                //Crashlytics.LogException(e);
             }
         };
 
