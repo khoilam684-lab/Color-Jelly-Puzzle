@@ -8,7 +8,7 @@ public class AppOpenAdManager : MonoBehaviour
     public static AppOpenAdManager Instance { get; private set; }
 
 #if UNITY_ANDROID
-    private const string AD_UNIT_ID = "ca-app-pub-3940256099942544/9257395921";
+    private const string AD_UNIT_ID = "ca-app-pub-7464731741377758/3923616914";//id real
 #elif UNITY_IOS
     private const string AD_UNIT_ID = "your-ios-id";
 #else
