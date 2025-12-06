@@ -34,6 +34,7 @@ public class LoadingPanel : MonoBehaviour
 
     public void Show(bool on)
     {
+        
         if (on)
         {
             if (_pendingHideCo != null) { StopCoroutine(_pendingHideCo); _pendingHideCo = null; }

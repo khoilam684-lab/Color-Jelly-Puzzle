@@ -52,13 +52,15 @@ public class GameManager : MonoBehaviour
             revivePanel.TimedOut += OnReviveTimedOut;
             revivePanel.gameObject.SetActive(false);
         }
+            QualitySettings.vSyncCount = 0; // Tắt VSync để control FPS
+            Application.targetFrameRate = 30;
     }
 
     void Start()
     {
         AppBannerCollapseAdManager.Instance.LoadAndShowBanner();
         StartCoroutine(CoBootFlow());
-        
+        AppBannerCollapseAdManager.Instance?.ShowBannerCollapse();
     }
 
     private IEnumerator CoBootFlow()
@@ -314,6 +316,7 @@ public class GameManager : MonoBehaviour
 
     public void ContinueFromSave()
     {
+        AppBannerCollapseAdManager.Instance?.ShowBannerCollapse();
         if (!SaveService.TryLoad(out var s) || s == null || s.scoreTotal <= 0)
         {
             StartNewGame();

@@ -10,10 +10,10 @@ public class AppBannerCollapseAdManager : MonoBehaviour
     public static AppBannerCollapseAdManager Instance { get; private set; }
 
 #if UNITY_ANDROID
-    private const string AD_BANNER_ID = "ca-app-pub-3940256099942544/6300978111"; // test
-    //private const string AD_BANNER_ID = "ca-app-pub-4845920793447822/7496706129"; // id real
+    private const string AD_BANNER_ID = "ca-app-pub-7464731741377758/4017895341"; // real id 
+   
 #elif UNITY_IOS
-    private const string AD_BANNER_ID = "ca-app-pub-9674055550946724/9362464015";
+    //private const string AD_BANNER_ID = "ca-app-pub-9674055550946724/9362464015";
 #else
     private const string AD_BANNER_ID = "unexpected_platform";
 #endif
@@ -47,7 +47,7 @@ public class AppBannerCollapseAdManager : MonoBehaviour
 
         try
         {
-            AdSize adSize = AdSize.GetPortraitAnchoredAdaptiveBannerAdSizeWithWidth(AdSize.FullWidth);
+            AdSize adSize = AdSize.Banner;   
             bannerView = new BannerView(AD_BANNER_ID, adSize, AdPosition.Bottom);
             Debug.Log("[BannerCollapse] Banner view created");
         }

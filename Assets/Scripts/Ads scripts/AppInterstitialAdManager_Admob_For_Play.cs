@@ -10,8 +10,7 @@ public class AppInterstitialAdManager_Admob_For_Play : MonoBehaviour
     public static AppInterstitialAdManager_Admob_For_Play Instance { get; private set; }
 
 #if UNITY_ANDROID
-    private const string AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"; // test Interstitial
-    //private const string AD_UNIT_ID = "ca-app-pub-7775816915507213/7432034972"; // id real
+    private const string AD_UNIT_ID = "ca-app-pub-7464731741377758/1368499519"; // real Interstitial
 #elif UNITY_IOS
     private const string AD_UNIT_ID = "ca-app-pub-4845920793447822/7496706129";
 #else

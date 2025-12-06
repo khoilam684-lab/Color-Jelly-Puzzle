@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Rendering.UI;
 using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
@@ -52,6 +53,7 @@ public class UIManager : MonoBehaviour
                 ShowRevive(false);
                 ShowGameOver(false);
                 ShowBestScore(false);
+                
                 AppBannerCollapseAdManager.Instance?.ShowBannerCollapse();
                 break;
             
@@ -75,8 +77,12 @@ public class UIManager : MonoBehaviour
                 ShowHome(false);
                 ShowHUD(true);
                 ShowSettingPanel(false);
-                AppBannerCollapseAdManager.Instance?.HideBannerCollapse();
-                AppInterstitialAdManager_Admob_For_Play.Instance?.ShowInterstitial();
+                AppBannerCollapseAdManager.Instance.HideBannerCollapse();
+                // Gọi quảng cáo interstitial
+                if (AppInterstitialAdManager_Admob_For_Play.Instance != null)
+                {
+                    AppInterstitialAdManager_Admob_For_Play.Instance.ShowInterstitial();
+                }
                 break;
             case GameState.BestScore:
                 ShowHome(false);
@@ -85,6 +91,7 @@ public class UIManager : MonoBehaviour
                 ShowRevive(false);
                 ShowGameOver(false);
                 ShowBestScore(true);
+                AppBannerCollapseAdManager.Instance?.ShowBannerCollapse();
                 break;
         }
     }
@@ -101,6 +108,8 @@ public class UIManager : MonoBehaviour
         if (loadingPanel)
         {
             loadingPanel.Show(on);
+   
+            
         }
     }
 

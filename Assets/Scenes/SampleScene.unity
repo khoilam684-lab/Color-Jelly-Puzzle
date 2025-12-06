@@ -11039,7 +11039,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5084629679497560022, guid: 6a6e71d2e8742bc4593ad6b78d38dcc1, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -13036,8 +13036,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   progressBar: {fileID: 1906857166}
   progressLabel: {fileID: 1884766760}
-  smooth: 0.25
-  minVisibleSeconds: 3
+  smooth: 0.828
+  minVisibleSeconds: 5
 --- !u!1001 &1735344795
 PrefabInstance:
   m_ObjectHideFlags: 0
